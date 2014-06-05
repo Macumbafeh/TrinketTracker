@@ -1,0 +1,11 @@
+## Interface: 20400
+## Title: TrinketTracker
+## Author: Schaka
+## Notes: Tries to find out if an enemy trinketed and gives you the cooldown
+## SavedVariables: TrinketTracker
+
+libs\LibStub\LibStub.lua
+libs\DRData-1.0\DRData-1.0.xml
+libs\LibSimpleOptions-1.0\lib.xml
+
+TrinketTracker.lua
