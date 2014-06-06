@@ -9,6 +9,7 @@ local abilityIDs = {
 	[25274] = "physicalStun", -- Intercept Stun
 	[9005] = "physicalStun", -- Pounce stun
 	[5530] = "physicalStun", -- Mace Stun Effect
+	[34510] = "physicalStun", -- Deep Thunder/Storm Herald stun
 	[19410] = "physicalStun", -- Improved Concussive Shot
 	[12809] = "physicalStun", -- Concussion Blow	
 	[19577] = "physicalStun", -- Intimidation
@@ -200,6 +201,14 @@ local categories = {
 		["dispel"] = 1, 
 	},
 }
+
+local function map_length(t)
+    local c = 0
+    for k,v in pairs(t) do
+         c = c+1
+    end
+    return c
+end
 -- time before the CC naturally ends that trinket will still be tracked
 local timeOutBuffer = 0.5
 -- how much damage needs to be taken during root/fear before we can assume it wasn't trinketed
@@ -279,7 +288,7 @@ local unitIDs = {
 	["pettarget"] = 1,
 }
 
-TrinketTrackerDB = TrinketTrackerDB or { debug = true}
+TrinketTrackerDB = TrinketTrackerDB or { ["debug"] = true }
 
 local function log(msg)
 	if TrinketTrackerDB.debug == true then
@@ -345,21 +354,22 @@ end
 function TrinketTracker:PLAYER_LOGIN(...)
 	self:CreateOptions()
 	self.cdFrames = { }
+	self.trinketFrames = { }
 end
 
 local SO = LibStub("LibSimpleOptions-1.0")
 function TrinketTracker:CreateOptions()
 	local panel = SO.AddOptionsPanel("TrinketTracke", function() end)
 	self.panel = panel
-	SO.AddSlashCommand("TrinketTracke","/TrinketTracke")
+	SO.AddSlashCommand("TrinketTracke","/TrinketTracker")
 	SO.AddSlashCommand("TrinketTracke","/tt")
-	local title, subText = panel:MakeTitleTextAndSubText("Buff Library Addon", "General settings")
+	local title, subText = panel:MakeTitleTextAndSubText("Trinket Tracker Addon", "General settings")
 	local sync = panel:MakeToggle(
 	     'name', 'Debug',
 	     'description', 'Turns debugging info in your chat on/off',
-	     'default', false,
-	     'getFunc', function() return BuffLibDB.debug end,
-	     'setFunc', function(value) BuffLibDB.debug = value end)
+	     'default', true,
+	     'getFunc', function() return TrinketTrackerDB.debug end,
+	     'setFunc', function(value) TrinketTrackerDB.debug = value end)
 	     
 	sync:SetPoint("TOPLEFT",subText,"TOPLEFT",16,-32)
 end	
@@ -395,6 +405,11 @@ function TrinketTracker:PLAYER_ENTERING_WORLD(...)
 		if self.cdFrames[i] then
 			self.cdFrames[i]:SetCooldown(GetTime(), 0)
 		end
+	end
+	
+	for k,v in pairs(self.trinketFrames) do
+		v:SetCooldown(GetTime(), 0)
+		v:Hide()
 	end
 	
 	self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -643,8 +658,8 @@ function TrinketTracker:TrinketUsed(destGUID, destName)
 			if button and button.guid == destGUID then
 				if self.cdFrames[i] == nil then
 					self.cdFrames[i] = CreateFrame("Cooldown", "TrinketTimer"..i, button)
-					self.cdFrames[i]:SetWidth(35)
-					self.cdFrames[i]:SetHeight(35)
+					self.cdFrames[i]:SetWidth(40)
+					self.cdFrames[i]:SetHeight(40)
 					self.cdFrames[i]:SetPoint("LEFT", button, "RIGHT")
 					self.cdFrames[i]:SetCooldown(GetTime(), 120)
 				else
@@ -653,10 +668,43 @@ function TrinketTracker:TrinketUsed(destGUID, destName)
 			end	
 		end
 	else
-		-- code to create trinket frames myself with names
+		if not self.trinketFrames[destName] then
+			local frame 
+			if map_length(self.trinketFrames) == 0 then
+				frame = CreateFrame("Cooldown", "PvPTrinket_1", UIParent)
+				frame.font=frame:CreateFontString("TrinketFont_1")
+				frame:SetPoint("CENTER", 300, 50)
+			else
+				frame = CreateFrame("Cooldown", "PvPTrinket_"..map_length(self.trinketFrames)+1, UIParent)
+				frame.font=frame:CreateFontString("TrinketFont_"..map_length(self.trinketFrames)+1)
+				if (map_length(self.trinketFrames))%3 == 0 then
+					frame:SetPoint("TOPLEFT", "PvPTrinket_"..map_length(self.trinketFrames)-2, "BOTTOMLEFT")
+				else
+					frame:SetPoint("TOPLEFT", "TrinketFont_"..map_length(self.trinketFrames), "TOPRIGHT")
+				end
+			end
+			frame:SetHeight(30)
+			frame:SetWidth(30)
+			frame.texture = frame:CreateTexture("TrinketTexture", "BACKGROUND")
+			frame.texture:SetTexture("Interface\\Icons\\inv_jewelry_trinketpvp_01")
+			frame.texture:SetAllPoints(frame)
+			frame.font:SetFontObject("GameFontNormal", 15)
+			frame.font:SetText(destName)
+			frame.font:SetPoint("TOPLEFT", frame, "TOPRIGHT")
+			frame:SetCooldown(GetTime(), 120)
+			self.trinketFrames[destName] = frame
+		else
+			self.trinketFrames[destName]:SetCooldown(GetTime(), 120)
+		end	
 	end
 	log("Trinket Used: "..destName)
 	
+end
+
+function TrinketTracker:Test()
+	for i=1,15 do
+		TrinketTracker:TrinketUsed("someID", "name"..i)
+	end
 end
 
 function TrinketTracker:CheckDispel(destGUID, spellTimer, searchName)
