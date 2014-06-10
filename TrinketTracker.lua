@@ -683,10 +683,6 @@ function TrinketTracker:HasTrinket(categoryType, destGUID, destName, spellName, 
 		if not damage and not periodicDamage and not iceblock and not bubble and not protection and not tremor and not wotf and not zerker and not deathwish then
 			self:TrinketUsed(destGUID, destName, spellName)
 		end
-	elseif categoryType == "physicalFearTremorOverride" then -- Intimidating Shout needs a hack later because 2 spellIDs with one breaking on every damage, the other on bigDamage
-		if not damage and not periodicDamage and not iceblock and not bubble and not protection and not tremor and not wotf and not zerker and not deathwish and not override then
-			self:TrinketUsed(destGUID, destName, spellName)
-		end	
 	elseif categoryType == "physicalPolyPeriodic" then
 		if not damage and not iceblock and not bubble and not protection and not zerker then
 			self:TrinketUsed(destGUID, destName, spellName)
@@ -723,6 +719,10 @@ function TrinketTracker:HasTrinket(categoryType, destGUID, destName, spellName, 
 		if not bigDamage and not iceblock and not bubble and not dispel and not wotf and not tremor and not zerker and not deathwish then
 			self:TrinketUsed(destGUID, destName, spellName)
 		end
+	elseif categoryType == "magicFearTremorOverride" then
+		if not bigDamage and not iceblock and not bubble and not dispel and not wotf and not tremor and not zerker and not deathwish and not override then
+			self:TrinketUsed(destGUID, destName, spellName)
+		end	
 	elseif categoryType == "magic" then
 		if not iceblock and not bubble and not dispel then
 			self:TrinketUsed(destGUID, destName, spellName)
