@@ -271,7 +271,7 @@ local immunityIDs = {
 
 local shapeshiftIDs = {
 	[783] = 1, -- Travel form
-	[786] = 1, -- Cat form
+	[768] = 1, -- Cat form
 	[9634] = 1, -- Dire bear form
 	[24858] = 1, -- Moonkin form
 }
@@ -355,6 +355,7 @@ function TrinketTracker:PLAYER_LOGIN(...)
 	self:CreateOptions()
 	self.cdFrames = { }
 	self.trinketFrames = { }
+	self.tremor = false
 end
 
 local SO = LibStub("LibSimpleOptions-1.0")
@@ -397,6 +398,7 @@ function TrinketTracker:PLAYER_ENTERING_WORLD(...)
 	
 	self.guids = {}
 	self.abilities = {}
+	self.tremor = false
 	for k,v in pairs(abilityIDs) do
 		self.abilities[GetSpellInfo(k)]=v;
 	end
@@ -452,7 +454,7 @@ function TrinketTracker:CheckTrinket(category, destGUID, destName, spellTimer, s
 	cloak, bm, deathwish, interrupt, shapeshift
 	
 	if category["none"] then
-		self:TrinketUsed(destGUID, destName)
+		self:TrinketUsed(destGUID, destName, spellName)
 		return
 	end	
 	if category["damage"] then
@@ -587,71 +589,71 @@ function TrinketTracker:CheckTrinket(category, destGUID, destName, spellTimer, s
 	cloak, bm, deathwish, interrupt, shapeshift
 end
 
-function TrinketTracker:HasTrinket(categoryType, destGUID, destName,...)
+function TrinketTracker:HasTrinket(categoryType, destGUID, destName, spellName, ...)
 	--takes all parameters
 	local damage, periodicDamage, bigDamage, iceblock, wotf, bubble, escapeartist,
 	stoneform, freedom, protection, dispel, tremor, zerker, sprint, blink, blazspeed,
 	cloak, bm, deathwish, interrupt, shapeshift = select(1, ...)
 	if categoryType == "physicalStun" then
 		if not iceblock and not bubble and not protection and not blink and not bm then
-			self:TrinketUsed(destGUID, destName)
+			self:TrinketUsed(destGUID, destName, spellName)
 		end
 	elseif categoryType == "physicalPoly" then
 		if not damage and not periodicDamage and not iceblock and not bubble and not protection then
-			self:TrinketUsed(destGUID, destName)
+			self:TrinketUsed(destGUID, destName, spellName)
 		end
 	elseif categoryType == "physicalPolyZerker" then
 		if not damage and not periodicDamage and not iceblock and not bubble and not protection and not zerker and not bm then
-			self:TrinketUsed(destGUID, destName)
+			self:TrinketUsed(destGUID, destName, spellName)
 		end	
 	elseif categoryType == "physicalRoot" then
 		if not iceblock and not bubble and not protection and not freedom and not escapeartist and not sprint and not blazspeed and not blink and not bm and not shapeshift then
-			self:TrinketUsed(destGUID, destName)
+			self:TrinketUsed(destGUID, destName, spellName)
 		end
 	elseif categoryType == "physicalFearTremor" then -- Intimidating Shout needs a hack later because 2 spellIDs with one breaking on every damage, the other on bigDamage
 		if not damage and not periodicDamage and not iceblock and not bubble and not protection and not tremor and not wotf and not zerker and not deathwish then
-			self:TrinketUsed(destGUID, destName)
+			self:TrinketUsed(destGUID, destName, spellName)
 		end
 	elseif categoryType == "physicalPolyPeriodic" then
 		if not damage and not iceblock and not bubble and not protection and not zerker then
-			self:TrinketUsed(destGUID, destName)
+			self:TrinketUsed(destGUID, destName, spellName)
 		end
 	elseif categoryType == "magicPolyPeriodic" then -- Dragon's Breath
 		if not damage and not iceblock and not bubble and not dispel then
-			self:TrinketUsed(destGUID, destName)
+			self:TrinketUsed(destGUID, destName, spellName)
 		end	
 	elseif categoryType == "magicPoly" then
 		if not damage and not periodicDamage and not iceblock and not bubble and not dispel and not shapeshift then
-			self:TrinketUsed(destGUID, destName)
+			self:TrinketUsed(destGUID, destName, spellName)
 		end
 	elseif categoryType == "magicRoots" then
 		if not bigDamage and not iceblock and not bubble and not freedom and not escapeartist and not dispel and not sprint and not blazspeed and not blink and not bm and not cloak and not shapeshift then
-			self:TrinketUsed(destGUID, destName)
+			self:TrinketUsed(destGUID, destName, spellName)
 		end
 	elseif categoryType == "magicPolyTremor" then -- Hibernate
 		if not damage and not periodicDamage and not iceblock and not bubble and not dispel and not tremor then
-			self:TrinketUsed(destGUID, destName)
+			self:TrinketUsed(destGUID, destName, spellName)
 		end
 	elseif categoryType == "magicPolyTremorInterrupt" then -- Mind Control
 		if not damage and not periodicDamage and not iceblock and not bubble and not dispel and not tremor and not interrupt and not wotf then
-			self:TrinketUsed(destGUID, destName)
+			self:TrinketUsed(destGUID, destName, spellName)
 		end	
 	elseif categoryType == "poisonPolyTremor" then
 		if not damage and not periodicDamage and not iceblock and not bubble and not wotf and not dispel and not tremor and not stoneform then
-			self:TrinketUsed(destGUID, destName)
+			self:TrinketUsed(destGUID, destName, spellName)
 		end
 	elseif categoryType == "magicFearTremor" then
 		if not bigDamage and not iceblock and not bubble and not dispel and not wotf and not tremor and not zerker and not deathwish then
-			self:TrinketUsed(destGUID, destName)
+			self:TrinketUsed(destGUID, destName, spellName)
 		end
 	elseif categoryType == "magic" then
 		if not iceblock and not bubble and not dispel then
-			self:TrinketUsed(destGUID, destName)
+			self:TrinketUsed(destGUID, destName, spellName)
 		end	
 	end
 end
 
-function TrinketTracker:TrinketUsed(destGUID, destName)
+function TrinketTracker:TrinketUsed(destGUID, destName, spellName)
 	if getglobal("GladdyFrame") then
 		for i=1,5 do
 			local button = getglobal("GladdyButtonFrame"..i)
@@ -697,7 +699,7 @@ function TrinketTracker:TrinketUsed(destGUID, destName)
 			self.trinketFrames[destName]:SetCooldown(GetTime(), 120)
 		end	
 	end
-	log("Trinket Used: "..destName)
+	log("Trinket Used: "..destName.." for "..spellName)
 	
 end
 
@@ -907,7 +909,7 @@ function TrinketTracker:COMBAT_LOG_EVENT_UNFILTERED(...)
 		local spellTimer = self.guids[destGUID][spellName]
 		local category = categories[self.abilities[spellName]]
 		if GetTime()+timeOutBuffer < spellTimer.startTime+spellTimer.timeLeft then -- if expected spell duration-0.1 was not reached when SPELL_AURA_REMOVED was fired do
-			self:HasTrinket(self.abilities[spellName], destGUID, destName, self:CheckTrinket(category, destGUID, destName, spellTimer, spellName))
+			self:HasTrinket(self.abilities[spellName], destGUID, destName, spellName, self:CheckTrinket(category, destGUID, destName, spellTimer, spellName))
 		end
 	end
 	-- "hack" for tremor
