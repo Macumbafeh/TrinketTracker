@@ -87,13 +87,14 @@ local categories = {
 		["damage"] = 1, -- any form of damage breaks this
 		["periodicDamage"] = 1, -- any form of periodic damage breaks this
 	},
-	["physicalPolyOverride"] = {
+	["physicalPolyZerkerOverride"] = {
 		[10278] = 1, -- Blessing of Protection
 		[1020] = 1, -- Divine Shield
 		[45438] = 1, -- Ice Block
 		[18499] = 1, -- Berserker Rage
 		["damage"] = 1, -- any form of damage breaks this
 		["periodicDamage"] = 1, -- any form of periodic damage breaks this
+		["override"] = 1,
 	},
 	-- Hamstring proc etc
 	["physicalRoot"] = {
