@@ -410,10 +410,10 @@ end
 
 local SO = LibStub("LibSimpleOptions-1.0")
 function TrinketTracker:CreateOptions()
-	local panel = SO.AddOptionsPanel("TrinketTracke", function() end)
+	local panel = SO.AddOptionsPanel("TrinketTracker", function() end)
 	self.panel = panel
-	SO.AddSlashCommand("TrinketTracke","/TrinketTracker")
-	SO.AddSlashCommand("TrinketTracke","/tt")
+	SO.AddSlashCommand("TrinketTracker","/TrinketTracker")
+	SO.AddSlashCommand("TrinketTracker","/tt")
 	local title, subText = panel:MakeTitleTextAndSubText("Trinket Tracker Addon", "General settings")
 	local sync = panel:MakeToggle(
 	     'name', 'Debug',
@@ -474,6 +474,7 @@ function TrinketTracker:PLAYER_ENTERING_WORLD(...)
 	self:RegisterEvent("UNIT_AURA")
 	self:RegisterEvent("PLAYER_TARGET_CHANGED")
 	self:RegisterEvent("PLAYER_FOCUS_CHANGED")
+	self:RegisterEvent("CHAT_MSG_ADDON")
 	
 end
 
@@ -489,6 +490,25 @@ function TrinketTracker:UpdateTremor(...)
 		self.tremor = true
 		local milliseconds = tonumber(strsub(tostring(GetTime()), -3))/1000
 		self.tremorTime = GetTime()
+	end	
+end
+
+function TrinketTracker:CHAT_MSG_ADDON(prefix, message, channel, sender)
+	if prefix == "BuffLib" and sender ~= UnitName("player") then
+		local guid, name, duration, timeLeft = strsplit(",", message)
+		if guid == UnitGUID("target") then
+			self:UNIT_AURA("target")
+		elseif guid == UnitGUID("focus") then	
+			self:UNIT_AURA("focus")
+		elseif guid == UnitGUID("party1") then	
+			self:UNIT_AURA("party1")
+		elseif guid == UnitGUID("party2") then	
+			self:UNIT_AURA("party2")
+		elseif guid == UnitGUID("party3") then	
+			self:UNIT_AURA("party3")
+		elseif guid == UnitGUID("party4") then		
+			self:UNIT_AURA("party4")			
+		end
 	end	
 end
 
@@ -778,10 +798,11 @@ function TrinketTracker:TrinketUsed(destGUID, destName, spellName)
 		end	
 	end
 	log("Trinket Used: "..destName.." for "..spellName)
+	SendAddonMessage("GladdyTrinketUsed", destGUID)
 	
 end
 
-function TrinketTracker:Test()
+function TrinketTrackerTest()
 	for i=1,15 do
 		TrinketTracker:TrinketUsed("someID", "name"..i)
 	end
