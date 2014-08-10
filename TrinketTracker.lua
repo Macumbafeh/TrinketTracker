@@ -288,7 +288,9 @@ local logEvents = {
 	["SPELL_PERIODIC_LEECH"] = 1,
 	["SPELL_CAST_SUCCESS"] = 1,
 }
-
+local RealmNames = {
+	["EU Arena-tournament.com 2.4.3"] = 1,
+}
 local immunityIDs = {
 	[1020] = 1, -- Divine Shield
 	[45438] = 1, -- Ice Block
@@ -336,6 +338,10 @@ local unitIDs = {
 	["party3target"] = 1,
 	["party4target"] = 1,
 	["pettarget"] = 1,
+	["party1"] = 1,
+	["party2"] = 1,
+	["party3"] = 1,
+	["party4"] = 1,
 }
 
 TrinketTrackerDB = TrinketTrackerDB or { ["debug"] = true }
@@ -494,7 +500,7 @@ function TrinketTracker:UpdateTremor(...)
 end
 
 function TrinketTracker:CHAT_MSG_ADDON(prefix, message, channel, sender)
-	if prefix == "BuffLib" and sender ~= UnitName("player") then
+	if prefix == "BuffLib" and sender ~= UnitName("player") and not RealmNames[GetRealmName()] then
 		local guid, name, duration, timeLeft = strsplit(",", message)
 		if guid == UnitGUID("target") then
 			self:UNIT_AURA("target")
@@ -509,6 +515,8 @@ function TrinketTracker:CHAT_MSG_ADDON(prefix, message, channel, sender)
 		elseif guid == UnitGUID("party4") then		
 			self:UNIT_AURA("party4")			
 		end
+	elseif prefix == "GladdyTrinketUsed" and sender ~= UnitName("player") then
+		self:TrinketUsed(message, nil, nil)
 	end	
 end
 
@@ -752,7 +760,7 @@ function TrinketTracker:HasTrinket(categoryType, destGUID, destName, spellName, 
 end
 
 function TrinketTracker:TrinketUsed(destGUID, destName, spellName)
-	if getglobal("GladdyFrame") then
+	if getglobal("GladdyFrame") and destName then
 		for i=1,5 do
 			local button = getglobal("GladdyButtonFrame"..i)
 			if button and button.guid == destGUID then
@@ -795,14 +803,14 @@ function TrinketTracker:TrinketUsed(destGUID, destName, spellName)
 			self.trinketFrames[destName] = frame
 		else
 			self.trinketFrames[destName]:SetCooldown(GetTime(), 120)
-		end	
+		end
 	end
-	log("Trinket Used: "..destName.." for "..spellName)
-	SendAddonMessage("GladdyTrinketUsed", destGUID)
-	
+	--log("Trinket Used: "..destName.." for "..spellName)
+	--sourceGUID,sourceName,sourceFlags,destGUID,destName,destFlags,spellNum,spellName = ...;
+	SendAddonMessage("GladdyTrinketUsed", destGUID)	
 end
 
-function TrinketTrackerTest()
+function TrinketTracker:Test()
 	for i=1,15 do
 		TrinketTracker:TrinketUsed("someID", "name"..i)
 	end
@@ -1071,3 +1079,9 @@ function TrinketTracker:COMBAT_LOG_EVENT_UNFILTERED(...)
 		
 	end
 end
+
+-- hack for servers with serverside trinket support
+if RealmNames[GetRealmName()] then
+	TrinketTracker:UnregisterAllEvents()
+	TrinketTracker:RegisterEvent("CHAT_MSG_ADDON")
+end	
